@@ -2,14 +2,14 @@ import firebase from 'firebase/compat/app';
 import 'firebase/compat/firestore';
 //configurações do firebase
 const firebaseConfig = {
-    apiKey: "AIzaSyDxqdjSUvICEZ5hFfZRlfhLUZzzkSRt_BE",
-    authDomain: "tasknow-bd2a2.firebaseapp.com",
-    databaseURL: "https://tasknow-bd2a2-default-rtdb.firebaseio.com",
-    projectId: "tasknow-bd2a2",
-    storageBucket: "tasknow-bd2a2.appspot.com",
-    messagingSenderId: "1032114607193",
-    appId: "1:1032114607193:web:20a90c7d1b3cb012a88d48",
-    measurementId: "G-CTYFXF7MMP"
+    apiKey: "*************************************",
+    authDomain: "*********.firebaseapp.com",
+    databaseURL: "https://************.firebaseio.com",
+    projectId: "***************",
+    storageBucket: "*********.appspot.com",
+    messagingSenderId: "*********************",
+    appId: "***************************************",
+    measurementId: "*********"
   };
 
 // inicializa o firebase
