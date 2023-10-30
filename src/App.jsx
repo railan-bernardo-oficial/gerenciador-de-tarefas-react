@@ -1,7 +1,7 @@
 import React, { useRef, useEffect, useState } from 'react'
 import { firestore, timestamp } from './services/firebase'
 import 'firebase/compat/firestore';
-import { Layout, theme, Button, Form, Input, Card, Table, Col, Row, Popconfirm, Space, message, FloatButton } from 'antd';
+import { Layout, theme, Button, Form, Input, Card, Table, Col, Row, Popconfirm, Space, message, FloatButton, Checkbox, Tag } from 'antd';
 import { InfoCircleOutlined, SearchOutlined, DeleteOutlined, EditOutlined, CopyOutlined } from '@ant-design/icons'
 import Highlighter from 'react-highlight-words';
 const {  Header, Content } = Layout;
@@ -13,6 +13,8 @@ function App() {
   const [dataSource, setDataSource] = useState([])
   const [taskName, setTaskName] = useState('')
   const [taskDesc, setTaskDesc] = useState('')
+  const [status, setStatus] = useState('')
+  const [checked, setChecked] = useState(false)
   const [update, setUpdate] = useState(false)
   const [dataKey, setDataKey] = useState('')
   const [pagination, setPagination] = useState({ current: 1, pageSize: 5 });
@@ -152,21 +154,30 @@ function App() {
       width: '30%',
       ...getColumnSearchProps('title')
     },
-  
     {
-      desc: 'Descrição',
+      title: 'Descrição',
       dataIndex: 'desc',
-      width: '50%',
+      width: '40%',
+    },
+    {
+      title: 'Status',
+      dataIndex: 'status',
+      width: '10%',
+      render: (_, record) =>
+      <Space>
+        {record.status == `Entregue` ? (<Tag color="#87d068">{record.status}</Tag>) : (<Tag color="#ffc107">{record.status}</Tag>)}
+      </Space>
     },
     {
       title: 'Ações',
       dataIndex: 'action',
+      width: '20%',
       render: (_, record) =>
         <Space wrap>
             <Button
               type="primary"
               icon={<EditOutlined />}
-              onClick={() => handleInputs(record.key, record.title, record.desc)}
+              onClick={() => handleInputs(record.key, record.title, record.desc, record.status)}
             />
             <Popconfirm okText="Sim" cancelText="Cancelar" title="Tem certeza?" onConfirm={() => handleDelete(record.key)}>
                 <Button
@@ -197,6 +208,7 @@ function App() {
               key: doc.id,
               title: doc.data.title,
               desc: doc.data.desc,
+              status: doc.data.status,
             }))
           );
       })
@@ -211,6 +223,7 @@ function App() {
     db.collection("tasks").add({
       title: data.title,
       desc: data.desc,
+      status: status !== '' ? status : 'Pendente',
       created_at: timestamp,
     }).then(res =>{
       success();
@@ -219,6 +232,14 @@ function App() {
     })
     form.resetFields()
   }
+
+  //define o status da tarefa
+  const onChangeChecked = (e) => {
+    const check = checked == false ? true : false;
+    setChecked(check)
+    const textStatus = e.target.checked == true ? 'Entregue' : 'Pendente'
+    setStatus(textStatus)
+  };
 
   //configuração da paginação
   const onChange = (pagination, filters, sorter, extra) => {
@@ -239,12 +260,15 @@ function App() {
   };
 
   //passa os dados para os campo do formulário
-  const handleInputs = (key, title, desc) => {
+  const handleInputs = (key, title, desc, statu) => {
     setTaskName(title)
     setTaskDesc(desc)
+    const st = statu == 'Pendente' ? false : true
+    setChecked(st)
     form.setFieldsValue({
       title: title,
       desc: desc,
+      status: statu
     })
     setUpdate(true)
     setDataKey(key)
@@ -252,10 +276,10 @@ function App() {
 
   //atualiza um registro no firebase
   const updateTask = (data) => {
-
     db.collection('tasks').doc(dataKey).update({
       title: data.title,
       desc: data.desc,
+      status: status !== '' ? status : 'Pendente',
       created_at: timestamp,
     }).then(() =>{
       success('Atualizado com sucesso!')
@@ -295,7 +319,7 @@ function App() {
     // Utilize o método map para formatar os dados conforme necessário
     const formatList = data.map((item) => {
       // Acesse os dados do documento
-      const { title, desc } = item.data;
+      const { title, desc, status } = item.data;
       
      const day = timestamp.toDate().getDate()
      const month = (timestamp.toDate().getMonth()+1)
@@ -304,7 +328,7 @@ function App() {
      const date = `${day}/${month}/${year}`
   
       // Formate os dados conforme necessário
-      const listFormated = `Título: ${title}\nDescrição: ${desc}\nData: ${date}\n`;
+      const listFormated = `Título: ( ${status} ) ${title}\nDescrição: ${desc}\nData: ${date}\n`;
   
       return listFormated;
     });
@@ -315,13 +339,6 @@ function App() {
     // Retorna a string formatada para a área de transferência
     return textEnd;
   };
-
-  
-
-  
-  
-  
-  
 
   //configuração de thema do antd
   const {
@@ -387,6 +404,9 @@ function App() {
                           }}
                         >
                             <Input.TextArea  placeholder="Descrição da tarefa" />
+                        </Form.Item>
+                        <Form.Item name="status">
+                        <Checkbox checked={checked} onChange={onChangeChecked}>Entregue</Checkbox>
                         </Form.Item>
                         <Form.Item>
                             <Button type="primary" htmlType="submit">{update == true ? 'Atualizar' : 'Salvar'}</Button>
